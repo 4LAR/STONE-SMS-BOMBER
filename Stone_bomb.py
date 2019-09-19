@@ -3,7 +3,7 @@
 #   by 100LAR
 #
 
-ver = "0.1.0"
+ver = "0.1.1"
 
 import inspect
 import logging
@@ -13,9 +13,24 @@ import sys
 import threading
 import webbrowser
 
-services = os.listdir('services')
+import configparser
+
+if not os.path.exists("settings.txt"):
+    config = configparser.ConfigParser()
+    config.add_section("Settings")
+    config.set("Settings", "call", "False")
+    config.set("Settings", "service-path", "services")
+    with open("settings.txt", "w") as config_file:
+        config.write(config_file)
+
+config = configparser.ConfigParser()
+config.read("settings.txt")
+send_calls = config.get("Settings", "call")
+service_path = config.get("Settings", "service-path")
+
+services = os.listdir(service_path)
 service_classes = {}
-sys.path.insert(0, 'services')
+sys.path.insert(0, service_path)
 
 print("Import services...")
 
@@ -39,9 +54,8 @@ count = input("Count : ")
 print("\nMessages ~ " + str(len(service_classes) * int(count)))
 country_code = 'ru'
 phone_code = '7'
-send_calls = True
 sms_text = 'test'
-send_calls_bool = True if send_calls == 'true' else False
+send_calls_bool = True if send_calls == 'true' or send_calls == 'True' else False
 for _ in range(int(count)):
         for module_, service_class in service_classes.items():
             try:
