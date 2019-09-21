@@ -1,3 +1,5 @@
 # STONE SMS BOMBER
-<br>
-v0.1.2
+
+Version : 0.1.3<br>
+>pip install requests<br>
+>pip install fake_useragent
